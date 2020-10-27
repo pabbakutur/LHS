@@ -1,0 +1,41 @@
+create table patient (
+id varchar(200),
+postal varchar(200),
+gender varchar (200),
+age varchar (200),
+primary key (id));
+
+create table employee (
+name varchar(200),
+job varchar(200),
+department varchar(200),
+team varchar(200),
+primary key (name));
+
+create table booking (
+booking_number varchar(200),
+year varchar(200),
+month varchar(200),
+weekday varchar(200),
+weekday_name varchar(200),
+date varchar(200),
+time varchar(200),
+hour varchar(200),
+minute varchar(200),
+type_of_booking varchar(200),
+primary key (booking_number));
+
+create table arrival (
+arrival_number varchar(200),
+time_unit varchar(200),
+primary key (arrival_number));
+
+create table info (
+id varchar(200) references patient (id),
+name varchar(200) references employee (name),
+booking_number varchar(200) references booking (booking_number),
+arrival_number varchar(200) references arrival (arrival_number),
+patient_arrives varchar(200),
+cancellation_reason varchar(200),
+booking_or_arrival varchar(200),
+primary key (id, name, booking_number, arrival_number));
