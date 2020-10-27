@@ -12,7 +12,26 @@ file.close()
 
 
 
-personal_info = []
+patient_info = []
+employee_info = []
+booking_info = []
+arrival_info = []
+patient_and_employee = []
+patient_and_booking = []
+patient_and_arrival = []
+employee_and_booking = []
+employee_and_arrival = []
+booking_and_arrival = []
+distinct_id_list = []
+distinct_employee_list = []
+distinct_arrival_number_list = []
+id_checker = set()
+employee_checker = set()
+arrival_number_checker = set()
+id_checker_list = []
+employee_checker_list = []
+arrival_number_checker_list = []
+info_list = []
 for i in data:
 	identifier = i['Identifier']
 	booking_nr = i['Bókunarnúmer']
@@ -33,20 +52,71 @@ for i in data:
 	employee_name = i['Heiti bókað á']
 	job_title = i['Starf 3 heiti']
 	cancellation_reason = i['Ástæða afbókunar']
+	cancellation_reason = cancellation_reason.replace(",","")
 	patient_arrives = i['Sjúklingur mætir']
 	booking_or_arrival = i['Bókun tengist komu']
 	type_of_booking = i['Heiti komuflokks']
 	time_unit = i['Tímaeining'] 
 	number_of_bookings = i['Fjöldi bókana']
+	#only add the id once
+	if i['Identifier'] not in id_checker_list:
+		distinct_id_list.append([identifier, postal_code, gender, age])
+		id_checker.add(i['Identifier'])
+		id_checker_list = list(id_checker)
+	#only add the employee once
+	if i['Heiti bókað á'] not in employee_checker_list:
+		employee_checker.add(i['Heiti bókað á'])
+		employee_checker_list = list(employee_checker)
+		employee_name = employee_name.replace(",","")
+		distinct_employee_list.append([employee_name, job_title, arrival_department, team])
+	#same process to remove all 0 for arrival id's, only unique values
+	if i['Komunúmer'] not in arrival_number_checker_list:
+		#if i['Komunúmer'] != '0':
+		distinct_arrival_number_list.append([arrival_number, time_unit])
+		arrival_number_checker.add(i['Komunúmer'])
+		arrival_number_checker_list = list(arrival_number_checker)
+	#ath sjúklingur mætir dálkurinn ekki alltaf réttur, stundum 1 þegar það er ekkert komunúmer
 	#Create groups of information to easily write to csv and input to sql
-	personal_info.append([identifier, postal_code, gender, age, booking_nr])
-
+	patient_info.append([identifier, postal_code, gender, age])
+	employee_info.append([employee_name, job_title, arrival_department, team])
+	booking_info.append([booking_nr, booking_year, booking_month, booking_weekday, booking_weekday_name, booking_date, booking_time, booking_hour, booking_minute, type_of_booking])
+	arrival_info.append([arrival_number, patient_arrives, cancellation_reason, time_unit])
+	#create reference groups
+	employee_name = employee_name.replace(",","")
+	info_list.append([identifier, employee_name, booking_nr, arrival_number, patient_arrives, cancellation_reason, booking_or_arrival])
+	
+	#old code
+	#patient_and_employee.append([identifier, employee_name])
+	#patient_and_booking.append([identifier, booking_nr])
+	#patient_and_arrival.append([identifier, arrival_number])
+	#employee_and_booking.append([employee_name, booking_nr])
+	#employee_and_arrival.append([employee_name, arrival_number])
+	#booking_and_arrival.append([booking_nr, arrival_number])
 
 
 f = open('Landspitalinn_python_finished.csv', 'w')
-#f.write('DateFrom;DateTo;LicensePlate;Dropoff\n')
-for x in personal_info:
-	f.write('{},{},{},{},{}\n'.format(x[0], x[1], x[2], x[3], x[4]))
+for x in distinct_id_list:
+	f.write("insert into patient (id, postal, gender, age) values ('{}', '{}', '{}', '{}');\n".format(x[0], x[1], x[2], x[3]))
+for x in distinct_employee_list:
+	f.write("insert into employee (name, job, department, team) values ('{}', '{}', '{}', '{}');\n".format(x[0], x[1], x[2], x[3]))
+for x in booking_info:
+	f.write("insert into booking (booking_number, year, month, weekday, weekday_name, date, time, hour, minute, type_of_booking) values ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');\n".format(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9]))
+for x in distinct_arrival_number_list:
+	f.write("insert into arrival (arrival_number, time_unit) values ('{}', '{}');\n".format(x[0], x[1]))
+for x in info_list:
+	f.write("insert into info (id, name, booking_number, arrival_number, patient_arrives, cancellation_reason, booking_or_arrival) values ('{}', '{}', '{}', '{}', '{}', '{}', '{}');\n".format(x[0], x[1], x[2], x[3], x[4], x[5], x[6]))
+#for x in patient_and_employee:
+#	f.write("insert into patient_and_employee (id, name) values ('{}','{}');\n".format(x[0], x[1]))
+#for x in patient_and_booking:
+#	f.write("insert into patient_and_booking (id, booking_number) values ('{}','{}');\n".format(x[0], x[1]))
+#for x in patient_and_arrival:
+#	f.write("insert into patient_and_arrival (id, arrival_number) values ('{}','{}');\n".format(x[0], x[1]))
+#for x in employee_and_booking:
+#	f.write("insert into employee_and_booking (name, booking_number) values ('{}','{}');\n".format(x[0], x[1]))
+#for x in employee_and_arrival:
+#	f.write("insert into employee_and_arrival (name, arrival_number) values ('{}','{}');\n".format(x[0], x[1]))
+#for x in booking_and_arrival:
+#	f.write("insert into booking_and_arrival (booking_number, arrival_number) values ('{}','{}');\n".format(x[0], x[1]))	
 f.close()
 
 
